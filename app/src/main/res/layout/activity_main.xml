@@ -29,6 +29,13 @@
       android:layout_above="@+id/info"
       />
 
+  <Button
+      android:id="@+id/btn_toggle_flash"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="Toggle Flash"
+      />
+
   <LinearLayout
       android:id="@+id/info"
       android:layout_width="match_parent"

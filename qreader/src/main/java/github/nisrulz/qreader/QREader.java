@@ -20,7 +20,10 @@ import android.Manifest;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.hardware.Camera;
 import android.os.Build;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.util.SparseArray;
@@ -28,11 +31,14 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewTreeObserver;
+
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
+
 import java.io.IOException;
+import java.lang.reflect.Field;
 
 /**
  * QREader Singleton.
@@ -58,6 +64,7 @@ public class QREader {
   private boolean autoFocusEnabled;
 
   private boolean cameraRunning = false;
+  private boolean isFlashOn = false;
 
   private boolean surfaceCreated = false;
   private final SurfaceHolder.Callback surfaceHolderCallback = new SurfaceHolder.Callback() {
@@ -237,6 +244,15 @@ public class QREader {
   }
 
   /**
+   * Is flash on boolean.
+   *
+   * @return the boolean
+   */
+  public boolean isFlashOn() {
+    return isFlashOn;
+  }
+
+  /**
    * Release and cleanup QREader.
    */
   public void releaseAndCleanup() {
@@ -253,6 +269,9 @@ public class QREader {
    */
   public void stop() {
     try {
+      if (isFlashOn) {
+        turnFlashOff();
+      }
       if (cameraRunning && cameraSource != null) {
         cameraSource.stop();
         cameraRunning = false;
@@ -261,6 +280,70 @@ public class QREader {
       Log.e(LOGTAG, ie.getMessage());
       ie.printStackTrace();
     }
+  }
+
+  /**
+   * Turn Flash On
+   */
+  public void turnFlashOn() {
+
+    if (cameraSource == null)
+      return;
+
+    Camera camera = getCamera(cameraSource);
+    if (camera != null) {
+      try {
+        Camera.Parameters param = camera.getParameters();
+        param.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+        camera.setParameters(param);
+        isFlashOn = true;
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+  /**
+   * Turn Flash Off
+   */
+  public void turnFlashOff() {
+
+    if (cameraSource == null)
+      return;
+
+    Camera camera = getCamera(cameraSource);
+    if (camera != null) {
+      try {
+        Camera.Parameters param = camera.getParameters();
+        param.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+        camera.setParameters(param);
+        isFlashOn = false;
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+  @Nullable
+  private static Camera getCamera(@NonNull CameraSource cameraSource) {
+    Field[] declaredFields = CameraSource.class.getDeclaredFields();
+
+    for (Field field : declaredFields) {
+      if (field.getType() == Camera.class) {
+        field.setAccessible(true);
+        try {
+          Camera camera = (Camera) field.get(cameraSource);
+          if (camera != null) {
+            return camera;
+          }
+          return null;
+        } catch (IllegalAccessException e) {
+          e.printStackTrace();
+        }
+        break;
+      }
+    }
+    return null;
   }
 
   /**

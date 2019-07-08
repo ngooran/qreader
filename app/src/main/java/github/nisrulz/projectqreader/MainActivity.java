@@ -65,6 +65,17 @@ public class MainActivity extends AppCompatActivity {
       }
     });
 
+    findViewById(R.id.btn_toggle_flash).setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        if (qrEader.isFlashOn()) {
+          qrEader.turnFlashOff();
+        } else {
+          qrEader.turnFlashOn();
+        }
+      }
+    });
+
     stateBtn.setVisibility(View.VISIBLE);
 
     Button restartbtn = findViewById(R.id.btn_restart_activity);
