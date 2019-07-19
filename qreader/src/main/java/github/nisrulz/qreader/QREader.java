@@ -132,6 +132,9 @@ public class QREader {
    * Init.
    */
   private void init() {
+    if (cameraRunning) {
+      cameraRunning = false;
+    }
     if (!hasAutofocus(context)) {
       Log.e(LOGTAG, "Do not have autofocus feature, disabling autofocus feature in the library!");
       autoFocusEnabled = false;
@@ -217,7 +220,7 @@ public class QREader {
   private void startCameraView(Context context, CameraSource cameraSource,
       SurfaceView surfaceView) {
     if (cameraRunning) {
-      throw new IllegalStateException("Camera already started!");
+      Log.e(LOGTAG, "Camera already started!");
     }
     try {
       if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
